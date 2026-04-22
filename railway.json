@@ -3,7 +3,8 @@
   "build": {
     "builder": "nixpacks",
     "buildPack": "php",
-    "phpVersion": "8.2"
+    "phpVersion": "8.2",
+    "startCmd": "php artisan serve --host=0.0.0.0 --port=$PORT"
   },
   "deploy": {
     "numReplicas": 1,

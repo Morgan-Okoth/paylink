@@ -7,8 +7,3 @@ pages_build_output_dir = "./public"
 binding = "DB"
 database_name = "paylink-db"
 database_id = "abfca9a1-5c11-4d87-818f-0a5693841808"
-
-[vars]
-APP_ENV = "production"
-APP_DEBUG = "false"
-QUEUE_CONNECTION = "sync"

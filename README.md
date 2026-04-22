@@ -14,48 +14,38 @@ A production-ready invoice management system for Kenyan small businesses with M-
 ## Tech Stack
 
 - Laravel 11
-- MySQL (Railway)
+- PostgreSQL/MySQL
 - Bootstrap 5
 - Safaricom Daraja API
 
-## Deployment to Railway
+## Deployment to Laravel Cloud
 
-### 1. Create Railway Project
+### 1. Sign Up
+Go to [cloud.laravel.com](https://cloud.laravel.com/sign-up) - $5 free credit, no credit card required.
 
-Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub** → select `paylink`
+### 2. Create Application
+1. Click **New Application**
+2. Connect GitHub → Select `paylink` repo
+3. Set app name: `paylink`
+4. Choose **PostgreSQL** database
+5. Click **Create**
 
-### 2. Add MySQL Database
+### 3. Deploy
+Click **Deploy** - Laravel Cloud auto-deploys from GitHub.
 
-```bash
-railway add mysql
+### 4. Run Migrations
+Go to **Commands** → Run:
+```
+php artisan migrate
 ```
 
-### 3. Set Environment Variables
-
-In Railway Dashboard → Variables, add:
-
+### 5. Configure M-Pesa Callback
+Set M-Pesa callback URL in Safaricom Developer Portal:
 ```
-APP_KEY=base64:GENERATED_KEY
-APP_URL=https://paylink.railway.app
+https://paylink-xxxxx.laravel.cloud/api/mpesa/callback
 ```
 
-Railway will auto-fill `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` from your MySQL instance.
-
-### 4. Deploy
-
-Click **Deploy** in Railway dashboard.
-
-### 5. Run Migrations
-
-```bash
-railway run php artisan migrate
-```
-
-### 6. Start Queue Worker
-
-```bash
-railway run php artisan queue:work --queue=mpesa-callbacks
-```
+---
 
 ## Local Development
 
@@ -74,7 +64,7 @@ php artisan serve
 1. Register at [Safaricom Developer Portal](https://developer.safaricom.co.ke)
 2. Create an app to get Consumer Key/Secret
 3. Get your Shortcode and Passkey
-4. Set the callback URL: `https://your-app.railway.app/api/mpesa/callback`
+4. Set callback URL to your deployed app
 
 ## Usage Flow
 
@@ -94,13 +84,6 @@ users ───────┬────── customers ───────
                       │                    │
                       └─── transactions ───┘
 ```
-
-## Security Features
-
-- Idempotent callback handling (prevents duplicate payments)
-- Phone number validation (Kenya format: 254...)
-- Database transactions for payment processing
-- Full audit trail in transactions table
 
 ## License
 

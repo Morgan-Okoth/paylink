@@ -1,6 +1,6 @@
 # PayLink - M-Pesa Invoice Manager
 
-A production-ready invoice management system for Kenyan small businesses with M-Pesa (Safaricom Daraja API) integration.
+A production-ready invoice management system for Kenyan small businesses with M-Pesa (Safaricom Daraja API) integration, deployed on Cloudflare Pages with D1 database.
 
 ## Features
 
@@ -14,7 +14,8 @@ A production-ready invoice management system for Kenyan small businesses with M-
 ## Tech Stack
 
 - Laravel 11
-- MySQL (Railway)
+- Cloudflare Pages (Workers)
+- Cloudflare D1 (SQLite)
 - Bootstrap 5
 - Safaricom Daraja API
 
@@ -32,78 +33,75 @@ php artisan migrate
 php artisan serve
 ```
 
-### M-Pesa Callbacks (Local)
+## Deployment to Cloudflare Pages
 
-Use cloudflared for local callback testing:
-
-```bash
-./cloudflared tunnel run paylink-dev
-```
-
-Set `APP_URL` to your cloudflared URL and update the callback URL in Safaricom Developer Portal.
-
-## Deployment to Railway
-
-### 1. Create Railway Project
+### 1. Create D1 Database
 
 ```bash
-railway init
-railway project create paylink
+npm install -g wrangler
+wrangler login  # Login to Cloudflare
+wrangler d1 create paylink-db  # Create D1 database
 ```
 
-### 2. Add MySQL Database
+Save the `database_id` from the output.
+
+### 2. Configure wrangler.toml
+
+Update `wrangler.toml` with your database ID:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "paylink-db"
+database_id = "YOUR_DATABASE_ID_HERE"
+```
+
+### 3. Push Schema to D1
 
 ```bash
-railway add mysql
+wrangler d1 execute paylink-db --file=./database/migrations/*.sql
 ```
 
-### 3. Configure Environment Variables
+Or use SQL file:
+```bash
+wrangler d1 execute paylink-db --local --file=./schema.sql
+```
 
-In Railway Dashboard → Variables:
+### 4. Deploy to Cloudflare Pages
+
+```bash
+npx wrangler pages project create paylink
+npx wrangler pages deploy
+```
+
+### 5. Set Environment Variables in Cloudflare Dashboard
+
+Go to Workers & Pages → paylink → Settings → Variables:
 
 ```
 APP_NAME=PayLink
 APP_ENV=production
 APP_KEY=base64:YOUR_GENERATED_KEY
 APP_DEBUG=false
-APP_URL=https://your-app.railway.app
+APP_URL=https://paylink.YOUR_SUBDOMAIN.workers.dev
 
-DB_CONNECTION=mysql
-DB_HOST=from_railway_mysql_credentials
-DB_PORT=3306
-DB_DATABASE=railway
-DB_USERNAME=root
-DB_PASSWORD=YOUR_PASSWORD
-
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-CACHE_DRIVER=database
+CLOUDFLARE_D1_DATABASE_ID=YOUR_DATABASE_ID
+CLOUDFLARE_ACCOUNT_ID=YOUR_ACCOUNT_ID
+CLOUDFLARE_API_TOKEN=YOUR_API_TOKEN
 ```
 
-### 4. Deploy
+### 6. Run Migrations
 
 ```bash
-railway up
+wrangler d1 execute paylink-db --remote -e production -- --file=./migrations/schema.sql
 ```
 
-### 5. Run Migrations
-
-```bash
-railway run php artisan migrate
-```
-
-### 6. Start Queue Worker
-
-```bash
-railway run php artisan queue:work --queue=mpesa-callbacks
-```
-
-### 7. M-Pesa Setup
+## M-Pesa Setup
 
 1. Register at [Safaricom Developer Portal](https://developer.safaricom.co.ke)
 2. Create an app to get Consumer Key/Secret
 3. Get your Shortcode and Passkey
-4. Set the callback URL: `https://your-app.railway.app/api/mpesa/callback`
+4. Set the callback URL: `https://paylink.YOUR_SUBDOMAIN.workers.dev/api/mpesa/callback`
 
 ## Usage Flow
 
@@ -126,7 +124,7 @@ railway run php artisan queue:work --queue=mpesa-callbacks
 ```
 users ───────┬────── customers ─────── invoices
              │                            │
-             └────── payments              │
+             └────── payments             │
                       │                    │
                       └─── transactions ───┘
 ```

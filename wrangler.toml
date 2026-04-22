@@ -1,0 +1,11 @@
+name = "paylink"
+compatibility_date = "2024-04-22"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "paylink-db"
+database_id = "YOUR_D1_DATABASE_ID"
+
+[vars]
+APP_ENV = "production"
+APP_DEBUG = "false"

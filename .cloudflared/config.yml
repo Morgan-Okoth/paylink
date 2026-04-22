@@ -1,8 +1,0 @@
-tunnel: paylink-dev
-credentials-file: /root/.cloudflared/credentials.json
-
-ingress:
-  - service: http://localhost:8000
-    originRequest:
-      noTLSVerify: true
-  - service: http_status_404
